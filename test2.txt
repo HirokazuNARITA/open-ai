@@ -1,0 +1,26 @@
+[
+  {'content': [
+    {'type': 'image', 'file_id': 'file-MabzJMxd6MpsrZDKiiovR4j0'},
+    {'type': 'text', 'value': '上記の散布図は、ロケーションの地理的な分布を示しています。','file_ids': []}
+  ]}, 
+  {'content': [
+    {'type': 'image', 'file_id': 'file-tsjjnSufSSFbyaCVATt6oKsU'}, 
+    {'type': 'text', 'value': '円グラフは、ロケーションタイプごとのロケーションの割合を表示しています。', 'file_ids': []}
+  ]}, 
+  {'content': [
+    {'type': 'image', 'file_id': 'file-32cMifx2SOtHhn6kNmiGA4nj'}, 
+    {'type': 'text', 'value': '棒グラフは、異なる地理的領域にあるロケーションタイプの分布を示しています。', 'file_ids': []}
+  ]}, 
+  {'content': [
+    {'type': 'text', 'value': 'データフレームを正常に読み込むことができました。', 'file_ids': []}
+  ]}, 
+  {'content': [
+    {'type': 'text', 'value': 'ファイルの内容を確認した結果、データはCSV形式（コンマ区切りの値）であることが分かります。', 'file_ids': []}
+  ]}, 
+  {'content': [
+    {'type': 'text', 'value': 'ファイルに拡張子がないため、ファイルのタイプを判断することができません。', 'file_ids': []}
+  ]}, 
+  {'content': [
+    {'type': 'text', 'value': 'まずはアップロードされたファイルを読み込み、その内容を確認しましょう。', 'file_ids': []}
+  ]}
+]
