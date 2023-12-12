@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
+import traceback
 from openai import OpenAI
-from common.utils import retreve_runs
+from common.utils import retrieve_runs
 
 client = OpenAI()
 
@@ -35,7 +36,7 @@ try:
     print("------runの生成--------")
     print(run)
 
-    run = retreve_runs(client=client, thread_id=thread.id, run_id=run.id)
+    run = retrieve_runs(client=client, thread_id=thread.id, run_id=run.id)
     print("-----runの回収-----")
     print(run)
 
@@ -56,7 +57,8 @@ try:
 
 
 except Exception as e:
-    print(f"予期せぬエラーが発生しました: {e}")
+    print("予期せぬエラーが発生しました:", {e})
+    print(traceback.print_exc())
 
 finally:
     # 後片付け

@@ -1,2 +1,3 @@
 openai-env
 __pycache__
+output/**/*

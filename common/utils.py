@@ -7,8 +7,7 @@ import backoff
 import requests
 
 
-@backoff.on_exception(backoff.expo, requests.exceptions.RequestException, max_time=30)
-def retreve_runs(client, thread_id, run_id):
+def _retrieve_runs(client, thread_id, run_id):
     run = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
 
     print("------runの回収中------")
@@ -26,6 +25,15 @@ def retreve_runs(client, thread_id, run_id):
 
     # まだ完了していない場合は例外を発生させてリトライ
     raise requests.exceptions.RequestException("Runはまだ完了していません。")
+
+
+def retrieve_runs(client, thread_id, run_id, max_time=30):
+    # backoffデコレータを動的に適用
+    backoff_decorator = backoff.on_exception(
+        backoff.expo, requests.exceptions.RequestException, max_time=max_time
+    )
+    wrapped_function = backoff_decorator(_retrieve_runs)
+    return wrapped_function(client, thread_id, run_id)
 
 
 def latest_messages_from_assistant(messages):
