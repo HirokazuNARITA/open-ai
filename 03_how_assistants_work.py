@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 from openai import OpenAI
 import random
-import pprint
 import os
 import traceback
-from openai.types.beta.threads import (
-    MessageContentImageFile,
-    MessageContentText,
-)
-from common.utils import retrieve_runs
-from common.helper import transform_latest_assistant_messages, create_and_open_file
+from common.utils import create_and_open_file
+from common.helper import retrieve_runs, transform_latest_assistant_messages
 
 client = OpenAI()
 
@@ -62,7 +57,11 @@ try:
         id = data["id"]
         print(content["value"])
         print(",".join(content["image_file_ids"]) if content["image_file_ids"] else "")
-        print(",".join(content["file_ids"]) if content["file_ids"] else "")
+        print(
+            ",".join(map(lambda x: x["file_id"], content["file_ids"]))
+            if content["file_ids"]
+            else ""
+        )
 
         # 画像ファイルのダウンロード
         for image_file_id in content["image_file_ids"]:

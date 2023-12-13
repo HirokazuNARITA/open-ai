@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import traceback
 from openai import OpenAI
-from common.utils import retrieve_runs
+from common.helper import retrieve_runs
 
 client = OpenAI()
 
