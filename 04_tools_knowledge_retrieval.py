@@ -13,6 +13,25 @@ ASSISTANT_ID = os.getenv("ASSISTANT_ID")
 THREAD_ID = os.getenv("THREAD_ID")
 
 
+def response_chatbot(assistant, thread, user_input):
+    client.beta.threads.messages.create(
+        thread_id=thread.id, role="user", content=user_input
+    )
+    run = client.beta.threads.runs.create(
+        thread_id=thread.id,
+        assistant_id=assistant.id,
+        instructions="ユーザーには日本語で回答してください。",
+    )
+    run = retrieve_runs(client=client, thread_id=thread.id, run_id=run.id, max_time=360)
+    messages = client.beta.threads.messages.list(thread_id=thread.id)
+    assistant_msg_list = transform_latest_assistant_messages(messages=messages)
+
+    result = []
+    for data in assistant_msg_list:
+        result.append(f"チャットボット: {data['content']['value']}")
+    return result
+
+
 def main():
     try:
         file = None
@@ -60,21 +79,9 @@ def main():
                 break
 
             # チャットボットの応答を得る
-            client.beta.threads.messages.create(
-                thread_id=thread.id, role="user", content=user_input
-            )
-            run = client.beta.threads.runs.create(
-                thread_id=thread.id,
-                assistant_id=assistant.id,
-                instructions="ユーザーには日本語で回答してください。",
-            )
-            run = retrieve_runs(
-                client=client, thread_id=thread.id, run_id=run.id, max_time=360
-            )
-            messages = client.beta.threads.messages.list(thread_id=thread.id)
-            assistant_msg_list = transform_latest_assistant_messages(messages=messages)
-            for data in assistant_msg_list:
-                print(f"チャットボット: {data['content']['value']}")
+            res = response_chatbot(assistant, thread, user_input)
+            for response_text in res:
+                print(response_text)
 
     except Exception as e:
         print("予期せぬエラーが発生しました:", e)
