@@ -20,7 +20,6 @@ def response_chatbot(assistant, thread, user_input):
     run = client.beta.threads.runs.create(
         thread_id=thread.id,
         assistant_id=assistant.id,
-        instructions="ユーザーには日本語で回答してください。",
     )
     run = retrieve_runs(client=client, thread_id=thread.id, run_id=run.id, max_time=360)
     messages = client.beta.threads.messages.list(thread_id=thread.id)
@@ -43,7 +42,7 @@ def main():
             client.beta.assistants.retrieve(ASSISTANT_ID)
             if ASSISTANT_ID
             else client.beta.assistants.create(
-                instructions="あなたはカスタマーサポートのチャットボットです。ナレッジベースを活用して、顧客からの問い合わせに最適な対応をしましょう。",
+                instructions="あなたはカスタマーサポートのチャットボットです。ナレッジベースを活用して、顧客からの問い合わせに最適な対応をしましょう。ユーザーには日本語で回答してください。",
                 model="gpt-4-1106-preview",
                 tools=[{"type": "retrieval"}],
                 # file_ids=[file.id],

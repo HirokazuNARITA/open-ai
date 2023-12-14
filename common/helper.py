@@ -13,7 +13,7 @@ def _retrieve_runs(client, thread_id, run_id):
 
     print("running.....")
 
-    if run.status == "completed":
+    if run.status in ["completed", "requires_action"]:
         # print("Runが完了しました。")
         return run
     elif run.status == "failed":
