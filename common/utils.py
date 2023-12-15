@@ -2,6 +2,16 @@ import os
 
 
 def create_and_open_file(filepath, mode="w"):
+    """
+    指定されたファイルパスでファイルを作成し、オープンします。
+
+    Parameters:
+    filepath (str): 作成するファイルのパス。
+    mode (str): ファイルをオープンするモード（デフォルトは'w'）。
+
+    Returns:
+    file object: オープンされたファイルオブジェクト。
+    """
     # ファイルのディレクトリ部分を取得
     directory = os.path.dirname(filepath)
 
@@ -14,6 +24,15 @@ def create_and_open_file(filepath, mode="w"):
 
 
 def update_env_file(env_file_path, key_to_update, new_value):
+    """
+    .envファイルを更新し、指定されたキーの値を新しい値に変更します。
+
+    Parameters:
+    env_file_path (str): .envファイルのパス。
+    key_to_update (str): 更新する環境変数のキー。
+    new_value (str): 新しい値。
+
+    """
     # .envファイルを読み込む
     with open(env_file_path, "r") as file:
         lines = file.readlines()

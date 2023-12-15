@@ -3,11 +3,11 @@ import traceback
 from openai import OpenAI
 from common.helper import retrieve_runs
 
-# OpenAIクライアントの初期化
+# OpenAIクライアントを初期化します。
 client = OpenAI()
 
 try:
-    # 数学の家庭教師アシスタントを作成
+    # 数学の家庭教師アシスタントを作成します。
     assistant = client.beta.assistants.create(
         name="数学の家庭教師",
         description="あなたは数学の家庭教師です。コードを書いて実行し、数学の質問に答えてください。",
@@ -17,12 +17,12 @@ try:
     print("-----assistantの生成-------")
     print(assistant)
 
-    # スレッドの作成
+    # 新しいスレッドを作成します。
     thread = client.beta.threads.create()
     print("------threadの生成---------")
     print(thread)
 
-    # ユーザーからのメッセージをスレッドに投稿
+    # スレッドにユーザーのメッセージを投稿します。
     message = client.beta.threads.messages.create(
         thread_id=thread.id,
         role="user",
@@ -31,26 +31,26 @@ try:
     print("-------messageの生成---------")
     print(message)
 
-    # アシスタントに指示を出すためのrunを作成
+    # アシスタントに指示を出すためのrunを作成します。
     run = client.beta.threads.runs.create(
         thread_id=thread.id,
         assistant_id=assistant.id,
-        instructions="ユーザー名を 成田 浩和 としてください。このユーザーはプレミアムアカウントを持っています。",
+        # instructions="ユーザー名を 成田 浩和 としてください。このユーザーはプレミアムアカウントを持っています。",
     )
     print("------runの生成--------")
     print(run)
 
-    # runの詳細を取得
+    # runの詳細を取得します。
     run_details = retrieve_runs(client=client, thread_id=thread.id, run_id=run.id)
     print("-----runの詳細-----")
     print(run_details)
 
-    # スレッド内のメッセージを取得
+    # スレッド内のメッセージをリストアップします。
     messages = client.beta.threads.messages.list(thread_id=thread.id)
     print("--------messagesのリストアップ-------")
     print(messages)
 
-    # messagesリストからassistantの最新の回答を抽出
+    # アシスタントからの最新の回答を取得します。
     latest_assistant_response = next(
         (m.content[0].text.value for m in messages.data if m.role == "assistant"), None
     )
@@ -62,18 +62,16 @@ try:
     )
 
 except Exception as e:
-    # 予期せぬエラーのキャッチとトレースバックの出力
+    # 予期せぬエラーが発生した場合の処理を行います。
     print("予期せぬエラーが発生しました:", {e})
     print(traceback.print_exc())
 
 finally:
-    # 後片付け処理
-    # スレッドの削除
+    # スレッドとアシスタントを削除するクリーンアップ処理を行います。
     if thread:
         result_del = client.beta.threads.delete(thread.id)
         print(result_del)
 
-    # アシスタントの削除
     if assistant:
         result_del_assistant = client.beta.assistants.delete(assistant.id)
         print(result_del_assistant)
