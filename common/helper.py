@@ -8,6 +8,7 @@ import backoff
 import requests
 
 
+# TextAnnotationFilePath
 def _retrieve_runs(client, thread_id, run_id):
     """
     指定されたrunの状態を取得し、完了しているかどうかをチェックします。
@@ -110,13 +111,16 @@ def transform_latest_assistant_messages(messages):
             if isinstance(content, MessageContentText):
                 # MessageContentText の場合
                 text_info = content.text.value
-                file_paths = [
-                    {
-                        "file_id": annotation.file_path.file_id,
-                        "ext": os.path.splitext(annotation.text)[1][1:],  # 拡張子を抽出
-                    }
-                    for annotation in content.text.annotations
-                ]
+                file_paths = []
+                if hasattr(content.text, "annotations"):
+                    file_paths = [
+                        {
+                            "file_id": annotation.file_path.file_id,
+                            "ext": os.path.splitext(annotation.text)[1][1:],  # 拡張子を抽出
+                        }
+                        for annotation in content.text.annotations
+                        if annotation.__class__.__name__ == "TextAnnotationFilePath"
+                    ]
                 text_content = {
                     "type": "text",
                     "value": text_info,

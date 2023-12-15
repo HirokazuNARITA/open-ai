@@ -3,12 +3,13 @@ from openai import OpenAI
 import os
 import traceback
 from dotenv import load_dotenv
+from dotenv import load_dotenv
 from common.utils import update_env_file
 from common.helper import transform_latest_assistant_messages, retrieve_runs
 
-# OpenAIクライアントを初期化し、環境変数をロードします。
-client = OpenAI()
+# 環境変数をロードし、OpenAIクライアントを初期化します。
 load_dotenv()
+client = OpenAI()
 ASSISTANT_ID = os.getenv("ASSISTANT_ID")
 THREAD_ID = os.getenv("THREAD_ID")
 

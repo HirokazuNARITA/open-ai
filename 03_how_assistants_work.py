@@ -2,10 +2,13 @@
 from openai import OpenAI
 import random
 import os
+from dotenv import load_dotenv
 import traceback
 from common.utils import create_and_open_file
 from common.helper import retrieve_runs, transform_latest_assistant_messages
 
+# 環境変数をロードします。
+load_dotenv()
 # OpenAIクライアントを初期化します。
 client = OpenAI()
 

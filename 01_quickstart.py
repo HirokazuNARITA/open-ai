@@ -1,5 +1,8 @@
 from openai import OpenAI
+from dotenv import load_dotenv
 
+# 環境変数をロードします。
+load_dotenv()
 # OpenAIクライアントを初期化します。
 client = OpenAI()
 

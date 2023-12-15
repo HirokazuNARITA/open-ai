@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 import traceback
 from openai import OpenAI
+from dotenv import load_dotenv
 from common.helper import retrieve_runs
 
+# 環境変数をロードします。
+load_dotenv()
 # OpenAIクライアントを初期化します。
 client = OpenAI()
 

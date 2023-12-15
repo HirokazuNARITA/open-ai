@@ -2,6 +2,7 @@
 from openai import OpenAI
 import os
 import traceback
+from dotenv import load_dotenv
 import pprint
 import json
 from dotenv import load_dotenv
@@ -12,6 +13,8 @@ from common.helper import (
     latest_messages_from_assistant,
 )
 
+# 環境変数をロードします。
+load_dotenv()
 # OpenAIクライアントを初期化します。
 client = OpenAI()
 
