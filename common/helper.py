@@ -1,9 +1,6 @@
 import os
 from openai import OpenAI
-from openai.types.beta.threads import (
-    MessageContentImageFile,
-    MessageContentText,
-)
+from openai.types.beta.threads import TextContentBlock, ImageFileContentBlock
 import backoff
 import requests
 
@@ -108,7 +105,8 @@ def transform_latest_assistant_messages(messages):
 
         # contentを走査し、インスタンスによって異なる辞書を定義する
         for content in item.content:
-            if isinstance(content, MessageContentText):
+            # print(content.__class__.__name__)
+            if isinstance(content, TextContentBlock):
                 # MessageContentText の場合
                 text_info = content.text.value
                 file_paths = []
@@ -116,7 +114,9 @@ def transform_latest_assistant_messages(messages):
                     file_paths = [
                         {
                             "file_id": annotation.file_path.file_id,
-                            "ext": os.path.splitext(annotation.text)[1][1:],  # 拡張子を抽出
+                            "ext": os.path.splitext(annotation.text)[1][
+                                1:
+                            ],  # 拡張子を抽出
                         }
                         for annotation in content.text.annotations
                         if annotation.__class__.__name__ == "TextAnnotationFilePath"
@@ -126,7 +126,7 @@ def transform_latest_assistant_messages(messages):
                     "value": text_info,
                     "file_ids": file_paths,
                 }
-            elif isinstance(content, MessageContentImageFile):
+            elif isinstance(content, ImageFileContentBlock):
                 # MessageContentImageFile の場合
                 image_file_ids.append(content.image_file.file_id)
 
