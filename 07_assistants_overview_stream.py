@@ -34,7 +34,7 @@ try:
     message = client.beta.threads.messages.create(
         thread_id=thread.id,
         role="user",
-        content="方程式 `3x + 11 = 14` を解きたいのですが、教えてくれますか？",
+        content="方程式 `3x + 9 = 14` を解きたいのですが、教えてくれますか？",
     )
     print("-------messageの生成---------")
     print(message)

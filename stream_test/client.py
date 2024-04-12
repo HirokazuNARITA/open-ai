@@ -3,7 +3,7 @@ import json
 
 
 def send_message_and_get_stream(message):
-    url = "http://localhost:8000/chat"  # FastAPIサーバーのエンドポイント
+    url = "http://localhost:8000/assistant/queue"  # FastAPIサーバーのエンドポイント
     headers = {"Content-Type": "application/json"}
     data = json.dumps({"message": message})
 
