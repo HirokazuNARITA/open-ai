@@ -8,7 +8,7 @@ from common.helper import EventHandler
 # 環境変数をロードします。
 load_dotenv()
 # OpenAIクライアントを初期化します。
-client = OpenAI()
+client = OpenAI(default_headers={"OpenAI-Beta": "assistants=v1"})
 
 assistant = None
 thread = None
@@ -47,7 +47,8 @@ try:
     ) as stream:
         # stream.until_done()
         for text in stream.text_deltas:
-            print(text)
+            print(text, end="", flush=True)
+        print("")
 
     # # アシスタントに指示を出すためのrunを作成します。
     # run = client.beta.threads.runs.create(
