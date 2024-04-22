@@ -2,10 +2,11 @@
 import traceback
 from openai import OpenAI
 from dotenv import load_dotenv
-from common.helper import retrieve_runs
+from common.helper import StreamingEventHandler
+
 
 # 環境変数をロードします。
-# load_dotenv()
+load_dotenv(override=True)
 # OpenAIクライアントを初期化します。
 client = OpenAI()
 
@@ -32,40 +33,45 @@ try:
     message = client.beta.threads.messages.create(
         thread_id=thread.id,
         role="user",
-        content="方程式 `3x + 11 = 14` を解きたいのですが、教えてくれますか？",
+        # content="方程式 `3x + 11 = 14` を解きたいのですが、教えてくれますか？",
+        content="`f(x,y)=x^2+2xy+2y^2−6x+4y−1`の最小値を計算したいのですが、教えてくれますか？",
     )
     print("-------messageの生成---------")
     print(message)
 
-    # アシスタントに指示を出すためのrunを作成します。
-    run = client.beta.threads.runs.create(
+    # ### streamingなし ####
+    # # runの詳細を取得します。
+    # run = client.beta.threads.runs.create_and_poll(
+    #     thread_id=thread.id,
+    #     assistant_id=assistant.id,
+    #     instructions="Please address the user as Jane Doe. The user has a premium account.",
+    # )
+
+    # if run.status == "completed":
+    #     # スレッド内のメッセージをリストアップします。
+    #     messages = client.beta.threads.messages.list(thread_id=thread.id)
+    #     print("--------messagesのリストアップ-------")
+    #     print(messages)
+
+    #     # アシスタントからの最新の回答を取得します。
+    #     latest_assistant_response = next(
+    #         (m.content[0].text.value for m in messages.data if m.role == "assistant"), None  # type: ignore
+    #     )
+    #     print("-----Assistantの最新の回答-----")
+    #     print(latest_assistant_response)
+    # else:
+    #     print("-----Assistantの回答失敗-----")
+    #     print(f"回答に失敗しました。runステータス:{run.status}")
+    # ### streamingなし ###
+
+    ### streaingあり ###
+    with client.beta.threads.runs.stream(
         thread_id=thread.id,
         assistant_id=assistant.id,
-        # instructions="ユーザー名を 成田 浩和 としてください。このユーザーはプレミアムアカウントを持っています。",
-    )
-    print("------runの生成--------")
-    print(run)
-
-    # runの詳細を取得します。
-    run_details = retrieve_runs(client=client, thread_id=thread.id, run_id=run.id)
-    print("-----runの詳細-----")
-    print(run_details)
-
-    # スレッド内のメッセージをリストアップします。
-    messages = client.beta.threads.messages.list(thread_id=thread.id)
-    print("--------messagesのリストアップ-------")
-    print(messages)
-
-    # アシスタントからの最新の回答を取得します。
-    latest_assistant_response = next(
-        (m.content[0].text.value for m in messages.data if m.role == "assistant"), None  # type: ignore
-    )
-    print("-----Assistantの最新の回答-----")
-    print(
-        latest_assistant_response
-        if latest_assistant_response is not None
-        else "回答が見つかりませんでした。"
-    )
+        event_handler=StreamingEventHandler(),
+    ) as stream:
+        stream.until_done()
+    ### streaingあり ###
 
 except Exception as e:
     # 予期せぬエラーが発生した場合の処理を行います。

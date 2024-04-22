@@ -7,19 +7,45 @@ from typing_extensions import override
 from openai import AssistantEventHandler
 
 
-class EventHandler(AssistantEventHandler):
+class StreamingEventHandler(AssistantEventHandler):
     @override
     def on_text_created(self, text) -> None:
+        """
+        OpenAISDKでテキストがStreamingにより作成されたときに呼び出されるイベントハンドラーです。
+
+        Parameters:
+        text (str): 作成されたテキスト。
+        """
         print(f"\nassistant > ", end="", flush=True)
 
     @override
     def on_text_delta(self, delta, snapshot):
+        """
+        テキストに変更があったときに呼び出されるイベントハンドラーです。
+
+        Parameters:
+        delta (Delta): テキストの変更内容を含むデルタオブジェクト。
+        snapshot: 変更後のテキストのスナップショット。
+        """
         print(delta.value, end="", flush=True)
 
     def on_tool_call_created(self, tool_call):
+        """
+        ツールの呼び出しが作成されたときに呼び出されるイベントハンドラーです。
+
+        Parameters:
+        tool_call (ToolCall): 作成されたツールの呼び出しオブジェクト。
+        """
         print(f"\nassistant > {tool_call.type}\n", flush=True)
 
     def on_tool_call_delta(self, delta, snapshot):
+        """
+        ツールの呼び出しに変更があったときに呼び出されるイベントハンドラーです。
+
+        Parameters:
+        delta (Delta): ツールの呼び出しの変更内容を含むデルタオブジェクト。
+        snapshot: 変更後のツールの呼び出しのスナップショット。
+        """
         if delta.type == "code_interpreter":
             if delta.code_interpreter.input:
                 print(delta.code_interpreter.input, end="", flush=True)
@@ -30,7 +56,6 @@ class EventHandler(AssistantEventHandler):
                         print(f"\n{output.logs}", flush=True)
 
 
-# TextAnnotationFilePath
 def _retrieve_runs(client, thread_id, run_id):
     """
     指定されたrunの状態を取得し、完了しているかどうかをチェックします。
