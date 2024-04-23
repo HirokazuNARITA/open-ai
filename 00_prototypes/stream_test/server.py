@@ -6,6 +6,7 @@ from openai import AssistantEventHandler
 import threading
 import queue
 from contextlib import asynccontextmanager
+from fastapi.middleware.cors import CORSMiddleware
 
 
 @asynccontextmanager
@@ -42,7 +43,16 @@ async def app_lifespan(app: FastAPI):
             print(result_del_assistant)
 
 
-app = FastAPI(lifespan=app_lifespan)
+app = FastAPI(lifespan=app_lifespan)  # type: ignore
+
+# CORSミドルウェアを追加
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # すべてのオリジンを許可する場合
+    allow_credentials=True,
+    allow_methods=["*"],  # すべてのメソッドを許可する場合
+    allow_headers=["*"],  # すべてのヘッダーを許可する場合
+)
 
 # OpenAIクライアントのインスタンス化
 client = OpenAI()
@@ -128,21 +138,21 @@ async def assistant_queue(request: ChatRequest, base: Request):
 
     class EventHandler(AssistantEventHandler):
         def on_text_created(self, text):
-            q.put(f"\nassistant > ")
+            q.put(f"\n")
 
         def on_text_delta(self, delta, snapshot):
             q.put(delta.value)
 
         def on_tool_call_created(self, tool_call):
-            q.put(f"\nassistant > {tool_call.type}\n")
+            q.put(f"\n{tool_call.type}\n")
 
         def on_tool_call_delta(self, delta, snapshot):
             if delta.type == "code_interpreter":
-                if delta.code_interpreter.input:
-                    q.put(delta.code_interpreter.input)
-                if delta.code_interpreter.outputs:
+                if delta.code_interpreter.input:  # type: ignore
+                    q.put(delta.code_interpreter.input)  # type: ignore
+                if delta.code_interpreter.outputs:  # type: ignore
                     q.put(f"\n\noutput >")
-                    for output in delta.code_interpreter.outputs:
+                    for output in delta.code_interpreter.outputs:  # type: ignore
                         if output.type == "logs":
                             q.put(f"\n{output.logs}")
 

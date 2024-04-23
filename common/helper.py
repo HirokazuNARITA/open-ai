@@ -5,9 +5,14 @@ import backoff
 import requests
 from typing_extensions import override
 from openai import AssistantEventHandler
+from typing import List
 
 
 class StreamingEventHandler(AssistantEventHandler):
+    def __init__(self):
+        super().__init__()  # 基底クラスのコンストラクタを呼び出す
+        self.file_ids: List[str] = []  # ファイルIDを保持するためのリスト
+
     @override
     def on_text_created(self, text) -> None:
         """
@@ -47,13 +52,32 @@ class StreamingEventHandler(AssistantEventHandler):
         snapshot: 変更後のツールの呼び出しのスナップショット。
         """
         if delta.type == "code_interpreter":
-            if delta.code_interpreter.input:
-                print(delta.code_interpreter.input, end="", flush=True)
-            if delta.code_interpreter.outputs:
+            if delta.code_interpreter.input:  # type: ignore
+                print(delta.code_interpreter.input, end="", flush=True)  # type: ignore
+            if delta.code_interpreter.outputs:  # type: ignore
+                print(delta)
                 print(f"\n\noutput >", flush=True)
-                for output in delta.code_interpreter.outputs:
+                for output in delta.code_interpreter.outputs:  # type: ignore
+                    print("--output information--")
+                    print(f"\n{output}")  # type: ignore
                     if output.type == "logs":
                         print(f"\n{output.logs}", flush=True)
+                    elif output.type == "image":
+                        self.file_ids.append(output.image.file_id)  # type: ignore
+
+
+def file_download(file_id, file_path):
+    client = OpenAI()
+    data = client.files.content(file_id=file_id)
+    data_bytes = data.read()
+
+    directory = os.path.dirname(file_path)
+    # ディレクトリが存在しない場合は作成
+    if directory and not os.path.exists(directory):
+        os.makedirs(directory)
+    # ファイルをオープン
+    with open(file_path, "wb") as file:
+        file.write(data_bytes)
 
 
 def _retrieve_runs(client, thread_id, run_id):
@@ -163,7 +187,7 @@ def transform_latest_assistant_messages(messages):
                 if hasattr(content.text, "annotations"):
                     file_paths = [
                         {
-                            "file_id": annotation.file_path.file_id,
+                            "file_id": annotation.file_path.file_id,  # type: ignore
                             "ext": os.path.splitext(annotation.text)[1][
                                 1:
                             ],  # 拡張子を抽出

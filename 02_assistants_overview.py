@@ -44,7 +44,7 @@ try:
     # run = client.beta.threads.runs.create_and_poll(
     #     thread_id=thread.id,
     #     assistant_id=assistant.id,
-    #     instructions="Please address the user as Jane Doe. The user has a premium account.",
+    #     # instructions="Please address the user as Jane Doe. The user has a premium account.",
     # )
 
     # if run.status == "completed":

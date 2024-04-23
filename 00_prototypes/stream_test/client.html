@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Assistant Stream</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      #messages {
+        margin: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        height: 300px;
+        overflow-y: scroll;
+        background-color: #f9f9f9;
+      }
+      #input {
+        margin: 20px;
+        padding: 10px;
+        width: calc(100% - 44px);
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="messages"></div>
+    <input
+      type="text"
+      id="input"
+      placeholder="Type a message..."
+    />
+    <script>
+      const input = document.getElementById('input');
+      const messages = document.getElementById('messages');
+      let currentMessageDiv = null;
+
+      function appendMessage(text, isUser = false) {
+        // Check if we need to start a new message block
+        if (
+          currentMessageDiv === null ||
+          !currentMessageDiv.textContent.includes('assistant > ') ||
+          isUser
+        ) {
+          currentMessageDiv = document.createElement('div');
+          messages.appendChild(currentMessageDiv);
+          prefix = isUser ? 'user > ' : 'assistant > ';
+          currentMessageDiv.textContent = prefix + text;
+        } else {
+          // Append new text content directly to the last message div
+          currentMessageDiv.textContent += text;
+        }
+        messages.scrollTop = messages.scrollHeight; // Scroll to bottom
+      }
+
+      input.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter' && input.value.trim()) {
+          // Append user message
+          appendMessage(input.value, true);
+
+          // Send the message to the server
+          const response = await fetch(
+            'http://localhost:8000/assistant/queue',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ message: input.value }),
+            }
+          );
+
+          if (response.ok) {
+            // Start listening to the response stream
+            const reader = response.body.getReader();
+            function read() {
+              reader
+                .read()
+                .then(({ done, value }) => {
+                  if (!done) {
+                    appendMessage(new TextDecoder().decode(value));
+                    read(); // Read the next chunk of data
+                  }
+                })
+                .catch(console.error);
+            }
+            read();
+          } else {
+            console.error('Failed to send message');
+          }
+
+          input.value = ''; // Clear input field
+        }
+      });
+
+      // Focus the input on page load
+      input.focus();
+    </script>
+  </body>
+</html>
