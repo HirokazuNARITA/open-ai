@@ -26,6 +26,7 @@
         font-size: 16px;
       }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   </head>
   <body>
     <div id="messages"></div>
@@ -39,7 +40,7 @@
       const messages = document.getElementById('messages');
       let currentMessageDiv = null;
 
-      function appendMessage(text, isUser = false) {
+      function appendMessage(text, isUser = false, isFinal = false) {
         // Check if we need to start a new message block
         if (
           currentMessageDiv === null ||
@@ -53,6 +54,13 @@
         } else {
           // Append new text content directly to the last message div
           currentMessageDiv.textContent += text;
+        }
+        // If the stream is finished, convert the entire content to Markdown
+        if (isFinal) {
+          console.log(currentMessageDiv.textContent);
+          currentMessageDiv.innerHTML = marked.parse(
+            currentMessageDiv.textContent
+          );
         }
         messages.scrollTop = messages.scrollHeight; // Scroll to bottom
       }
@@ -82,8 +90,12 @@
                 .read()
                 .then(({ done, value }) => {
                   if (!done) {
+                    // Append the chunk to the message div
                     appendMessage(new TextDecoder().decode(value));
                     read(); // Read the next chunk of data
+                  } else {
+                    // When the stream is finished, mark the message as final
+                    appendMessage('', false, true);
                   }
                 })
                 .catch(console.error);
