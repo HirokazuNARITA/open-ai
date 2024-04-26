@@ -39,6 +39,7 @@
       const input = document.getElementById('input');
       const messages = document.getElementById('messages');
       let currentMessageDiv = null;
+      let currentOutput = null;
 
       function appendMessage(text, isUser = false, isFinal = false) {
         // Check if we need to start a new message block
@@ -50,17 +51,17 @@
           currentMessageDiv = document.createElement('div');
           messages.appendChild(currentMessageDiv);
           prefix = isUser ? 'user > ' : 'assistant > ';
-          currentMessageDiv.textContent = prefix + text;
+          currentOutput = prefix + text;
         } else {
           // Append new text content directly to the last message div
-          currentMessageDiv.textContent += text;
+          currentOutput += text;
         }
+        //convert markdown
+        currentMessageDiv.innerHTML = marked.parse(currentOutput);
+
         // If the stream is finished, convert the entire content to Markdown
         if (isFinal) {
-          console.log(currentMessageDiv.textContent);
-          currentMessageDiv.innerHTML = marked.parse(
-            currentMessageDiv.textContent
-          );
+          currentOutput = null;
         }
         messages.scrollTop = messages.scrollHeight; // Scroll to bottom
       }
