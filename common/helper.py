@@ -1,6 +1,6 @@
 import os
 from openai import OpenAI
-from openai.types.beta.threads import TextContentBlock, ImageFileContentBlock
+from openai.types.beta.threads import Text, TextContentBlock, ImageFileContentBlock
 import backoff
 import requests
 from typing_extensions import override
@@ -9,9 +9,10 @@ from typing import List
 
 
 class StreamingEventHandler(AssistantEventHandler):
-    def __init__(self):
+    def __init__(self, assistant_pronpt="assistant >"):
         super().__init__()  # 基底クラスのコンストラクタを呼び出す
         self.file_ids: List[str] = []  # ファイルIDを保持するためのリスト
+        self.assistant_prompt = assistant_pronpt
 
     @override
     def on_text_created(self, text) -> None:
@@ -21,7 +22,7 @@ class StreamingEventHandler(AssistantEventHandler):
         Parameters:
         text (str): 作成されたテキスト。
         """
-        print(f"\nassistant > ", end="", flush=True)
+        print(f"{self.assistant_prompt}", end="", flush=True)
 
     @override
     def on_text_delta(self, delta, snapshot):
@@ -34,6 +35,10 @@ class StreamingEventHandler(AssistantEventHandler):
         """
         print(delta.value, end="", flush=True)
 
+    @override
+    def on_text_done(self, text: Text) -> None:
+        print("", end="\n")
+
     def on_tool_call_created(self, tool_call):
         """
         ツールの呼び出しが作成されたときに呼び出されるイベントハンドラーです。
@@ -41,7 +46,7 @@ class StreamingEventHandler(AssistantEventHandler):
         Parameters:
         tool_call (ToolCall): 作成されたツールの呼び出しオブジェクト。
         """
-        print(f"\nassistant > {tool_call.type}\n", flush=True)
+        print(f"{self.assistant_prompt} {tool_call.type}\n", flush=True)
 
     def on_tool_call_delta(self, delta, snapshot):
         """
