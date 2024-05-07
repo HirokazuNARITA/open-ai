@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Chat with OpenAI</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      #chat {
+        margin: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        height: 300px;
+        overflow-y: scroll;
+        background-color: #f9f9f9;
+      }
+      #input {
+        margin: 20px;
+        padding: 10px;
+        width: calc(100% - 44px);
+        font-size: 16px;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  </head>
+  <body>
+    <div id="chat"></div>
+    <input
+      type="text"
+      id="input"
+      placeholder="Type a message..."
+      autofocus
+    />
+    <script>
+      const input = document.getElementById('input');
+      const messages = document.getElementById('chat');
+      let threadId = null;
+
+      let currentMessageDiv = null;
+      let currentOutput = null;
+
+      function appendMessage(text, isUser = false, isFinal = false) {
+        // Check if we need to start a new message block
+        if (
+          currentMessageDiv === null ||
+          !currentMessageDiv.textContent.includes('assistant > ') ||
+          isUser
+        ) {
+          currentMessageDiv = document.createElement('div');
+          messages.appendChild(currentMessageDiv);
+          prefix = isUser ? 'user > ' : 'assistant > ';
+          currentOutput = prefix + text;
+        } else {
+          // Append new text content directly to the last message div
+          currentOutput += text;
+        }
+        //convert markdown
+        currentMessageDiv.innerHTML = marked.parse(currentOutput);
+
+        // If the stream is finished, convert the entire content to Markdown
+        if (isFinal) {
+          currentOutput = null;
+        }
+        messages.scrollTop = messages.scrollHeight; // Scroll to bottom
+      }
+
+      input.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter' && input.value.trim()) {
+          const message = input.value;
+          appendMessage(message, true);
+          input.value = '';
+          const data = { message: message, thread_id: threadId };
+          const response = await fetch('http://localhost:8000/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+
+          if (response.ok) {
+            const respData = await response.json();
+            threadId = respData.thread_id; // スレッドIDを更新
+            const eventSource = new EventSource(
+              `http://localhost:8000/stream/${threadId}`
+            );
+            eventSource.onmessage = function (event) {
+              console.log(event);
+              const data = JSON.parse(event.data);
+              //messages.innerHTML += `<div>${data.message}</div>`;
+              appendMessage(data.message);
+            };
+            eventSource.onerror = function () {
+              eventSource.close();
+              appendMessage('', false, true);
+            };
+          } else {
+            console.error('Failed to send message');
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
