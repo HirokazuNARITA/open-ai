@@ -1,6 +1,11 @@
 import os
 from openai import OpenAI
-from openai.types.beta.threads import Text, TextContentBlock, ImageFileContentBlock
+from openai.types.beta.threads import (
+    ImageFile,
+    Text,
+    TextContentBlock,
+    ImageFileContentBlock,
+)
 import backoff
 import requests
 from typing_extensions import override
@@ -37,7 +42,36 @@ class StreamingEventHandler(AssistantEventHandler):
 
     @override
     def on_text_done(self, text: Text) -> None:
+        """テキストの出力が終了したときに呼び出されるイベントハンドラーです。
+
+        Parameters:
+        text (str): 作成されたテキスト。
+        """
         print("", end="\n")
+
+    @override
+    def on_message_done(self, message) -> None:
+        # print a citation to the file searched
+        print("on_message_done.....")
+        print(message)
+
+        for m_content in message.content:
+            if isinstance(m_content, TextContentBlock):
+                message_content = message.content[0].text  # type: ignore
+                annotations = message_content.annotations
+                citations = []
+                for index, annotation in enumerate(annotations):
+                    message_content.value = message_content.value.replace(
+                        annotation.text, f"[{index}]"
+                    )
+                    if file_citation := getattr(annotation, "file_citation", None):
+                        # cited_file = client.files.retrieve(file_citation.file_id)
+                        # citations.append(f"[{index}] {cited_file.filename}")
+                        print(file_citation)
+                        self.file_ids.append(file_citation.file_id)
+            elif isinstance(m_content, ImageFileContentBlock):
+                # MessageContentImageFile の場合
+                self.file_ids.append(m_content.image_file.file_id)
 
     def on_tool_call_created(self, tool_call):
         """
