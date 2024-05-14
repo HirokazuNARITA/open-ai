@@ -55,23 +55,26 @@ class StreamingEventHandler(AssistantEventHandler):
         print("on_message_done.....")
         print(message)
 
-        for m_content in message.content:
-            if isinstance(m_content, TextContentBlock):
-                message_content = message.content[0].text  # type: ignore
-                annotations = message_content.annotations
-                citations = []
-                for index, annotation in enumerate(annotations):
-                    message_content.value = message_content.value.replace(
-                        annotation.text, f"[{index}]"
-                    )
-                    if file_citation := getattr(annotation, "file_citation", None):
-                        # cited_file = client.files.retrieve(file_citation.file_id)
-                        # citations.append(f"[{index}] {cited_file.filename}")
-                        print(file_citation)
-                        self.file_ids.append(file_citation.file_id)
-            elif isinstance(m_content, ImageFileContentBlock):
-                # MessageContentImageFile の場合
-                self.file_ids.append(m_content.image_file.file_id)
+        for attachment in message.attachments:  # type: ignore
+            self.file_ids.append(attachment.file_id)  # type: ignore
+
+        # for m_content in message.content:
+        #     if isinstance(m_content, TextContentBlock):
+        #         message_content = message.content[0].text  # type: ignore
+        #         annotations = message_content.annotations
+        #         citations = []
+        #         for index, annotation in enumerate(annotations):
+        #             message_content.value = message_content.value.replace(
+        #                 annotation.text, f"[{index}]"
+        #             )
+        #             if file_citation := getattr(annotation, "file_citation", None):
+        #                 # cited_file = client.files.retrieve(file_citation.file_id)
+        #                 # citations.append(f"[{index}] {cited_file.filename}")
+        #                 print(file_citation)
+        #                 self.file_ids.append(file_citation.file_id)
+        #     elif isinstance(m_content, ImageFileContentBlock):
+        #         # MessageContentImageFile の場合
+        #         self.file_ids.append(m_content.image_file.file_id)
 
     def on_tool_call_created(self, tool_call):
         """

@@ -25,7 +25,7 @@ async def app_lifespan(app: FastAPI):
             name="数学の家庭教師",
             description="あなたは数学の家庭教師です。コードを書いて実行し、数学の質問に答えてください。",
             tools=[{"type": "code_interpreter"}],
-            model="gpt-4-turbo-2024-04-09",
+            model="gpt-4o",
         )
         # app.state.my_thread = client.beta.threads.create()
         print("-----assistantの生成-------")
