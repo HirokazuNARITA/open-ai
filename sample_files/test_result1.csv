@@ -1,11 +1,11 @@
-生徒ID,名前,数学,科学,英語,社会
-1,田中一郎,82,90,76,88
-2,佐藤恵子,90,92,85,91
-3,鈴木太郎,75,85,78,72
-4,伊藤花子,88,80,90,85
-5,渡辺悟,92,91,83,89
-6,山本あゆみ,77,84,81,73
-7,中村優子,88,79,87,90
-8,小林直人,91,90,82,88
-9,加藤剛,65,78,80,74
-10,吉田光,72,76,79,71
+StudentID,Name,Math,Science,English,SocialStudies
+1,Ichiro Tanaka,82,90,76,88
+2,Keiko Sato,90,92,85,91
+3,Taro Suzuki,75,85,78,72
+4,Hanako Ito,88,80,90,85
+5,Satoru Watanabe,92,91,83,89
+6,Ayumi Yamamoto,77,84,81,73
+7,Yuko Nakamura,88,79,87,90
+8,Naoto Kobayashi,91,90,82,88
+9,Tsuyoshi Kato,65,78,80,74
+10,Hikaru Yoshida,72,76,79,71
