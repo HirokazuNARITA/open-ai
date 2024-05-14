@@ -1,8 +1,9 @@
 import traceback
+import os
 import contextlib
 from openai import OpenAI
 from dotenv import load_dotenv
-from common.helper import StreamingEventHandler
+from common.helper import StreamingEventHandler, file_download
 
 load_dotenv(override=True)
 client = OpenAI()
@@ -28,7 +29,7 @@ try:
     assistant = client.beta.assistants.create(
         name="数学の家庭教師",
         instructions="あなたは数学の家庭教師です。数学の質問をされたら、その質問に答えるコードを書いて実行し、質問に答えてください。",
-        model="gpt-4",
+        model="gpt-4o",
         tools=[{"type": "code_interpreter"}],
         tool_resources={"code_interpreter": {"file_ids": [files[0].id]}},
     )
@@ -38,7 +39,7 @@ try:
     message = client.beta.threads.messages.create(
         thread_id=thread.id,
         role="user",
-        content="すべてのCSVファイルに含まれるデータについて答えてください。すべての生徒を対象として、科目ごとの平均点のグラフを可視化してください。",
+        content="すべてのCSVファイルに含まれるデータについて答えてください。科目ごとの平均点の棒グラフを作成してください。グラフは英語で、可視化の際はmatplotlib.pyplotを使用してください。",
         attachments=[{"file_id": files[1].id, "tools": [{"type": "code_interpreter"}]}],
     )
 
@@ -48,7 +49,10 @@ try:
     ) as stream:
         stream.until_done()
 
-    print(Eventhandler.file_ids)
+    # 画像ファイルをダウンロードします。
+    for image_file_id in Eventhandler.file_ids:
+        image_file_path = os.path.join(f"./output/{thread.id}", image_file_id + ".png")
+        file_download(file_id=image_file_id, file_path=image_file_path)
 
 
 except Exception as e:

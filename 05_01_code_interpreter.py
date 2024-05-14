@@ -16,7 +16,7 @@ try:
     assistant = client.beta.assistants.create(
         name="数学の家庭教師",
         instructions="あなたは数学の家庭教師です。数学の質問をされたら、その質問に答えるコードを書いて実行し、質問に答えてください。",
-        model="gpt-4-turbo",
+        model="gpt-4o",
         tools=[{"type": "code_interpreter"}],
     )
 

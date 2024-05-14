@@ -30,7 +30,7 @@ try:
     assistant = client.beta.assistants.create(
         name=f"データビジュアライザー_{random_num}号",
         description="あなたは美しいデータビジュアライゼーションを作成するのが得意です。あなたは、.csvファイルに存在するデータを分析し、傾向を理解し、それらの傾向に関連するデータビジュアライゼーションを考え出します。また、観察されたトレンドの簡単なテキストサマリーを共有します。",
-        model="gpt-4-turbo-2024-04-09",
+        model="gpt-4o",
         tools=[{"type": "code_interpreter"}],
         tool_resources={
             "code_interpreter": {"file_ids": [file.id]}

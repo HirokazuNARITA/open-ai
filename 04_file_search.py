@@ -57,7 +57,7 @@ def main():
             if ASSISTANT_ID
             else client.beta.assistants.create(
                 instructions="あなたはユーザーの回答に答える優秀なキュレーターです。ユーザーからの質問に対して、添付された資料やナレッジベースを最優先で参照し回答することを求められています。ユーザーには日本語で回答してください。",
-                model="gpt-4-turbo",
+                model="gpt-4o",
                 tools=[{"type": "file_search"}],
             )
         )
