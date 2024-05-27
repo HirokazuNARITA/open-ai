@@ -18,6 +18,10 @@ class StreamingEventHandler(AssistantEventHandler):
         super().__init__()  # 基底クラスのコンストラクタを呼び出す
         self.file_ids: List[str] = []  # ファイルIDを保持するためのリスト
         self.assistant_prompt = assistant_pronpt
+        self.files_on_image_file_done: List[str] = (
+            []
+        )  # on_image_file_doneで取得できたファイルIDのリスト
+        self.files_of_sitation: List[str] = []
 
     @override
     def on_text_created(self, text) -> None:
@@ -50,31 +54,29 @@ class StreamingEventHandler(AssistantEventHandler):
         print("", end="\n")
 
     @override
+    def on_image_file_done(self, image_file: ImageFile):
+        # imageファイルの作成が完了したときに発生するイベント
+        # code_interpeterで作成した画像等もここで取得されるので
+        # 画像取得はここに集約してもいいかも
+        self.files_on_image_file_done.append(image_file.file_id)
+
+    @override
     def on_message_done(self, message) -> None:
         # print a citation to the file searched
         print("on_message_done.....")
         print(message)
 
-        for attachment in message.attachments:  # type: ignore
-            self.file_ids.append(attachment.file_id)  # type: ignore
-
-        # for m_content in message.content:
-        #     if isinstance(m_content, TextContentBlock):
-        #         message_content = message.content[0].text  # type: ignore
-        #         annotations = message_content.annotations
-        #         citations = []
-        #         for index, annotation in enumerate(annotations):
-        #             message_content.value = message_content.value.replace(
-        #                 annotation.text, f"[{index}]"
-        #             )
-        #             if file_citation := getattr(annotation, "file_citation", None):
-        #                 # cited_file = client.files.retrieve(file_citation.file_id)
-        #                 # citations.append(f"[{index}] {cited_file.filename}")
-        #                 print(file_citation)
-        #                 self.file_ids.append(file_citation.file_id)
-        #     elif isinstance(m_content, ImageFileContentBlock):
-        #         # MessageContentImageFile の場合
-        #         self.file_ids.append(m_content.image_file.file_id)
+        for m_content in message.content:
+            if m_content.type == "text":
+                message_content = m_content.text
+                for annotation in message_content.annotations:
+                    if annotation.type == "file_path":
+                        file_citation = annotation.file_path
+                        # print(file_citation)
+                        self.files_of_sitation.append(file_citation.file_id)
+            elif m_content.type == "image_file":
+                # MessageContentImageFile の場合
+                self.file_ids.append(m_content.image_file.file_id)
 
     def on_tool_call_created(self, tool_call):
         """

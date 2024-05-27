@@ -105,6 +105,10 @@ try:
     ) as stream:
         stream.until_done()
 
+    print(eventHandler.file_ids)
+    print(eventHandler.files_on_image_file_done)
+    print(eventHandler.files_of_sitation)
+
     # 画像ファイルをダウンロードします。
     for image_file_id in eventHandler.file_ids:
         image_file_path = os.path.join(f"./output/{thread.id}", image_file_id + ".png")
