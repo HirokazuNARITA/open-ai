@@ -13,13 +13,17 @@ from common.helper import (
     latest_messages_from_assistant,
 )
 
+from openai import AssistantEventHandler
+from typing_extensions import override
+import ast
+
 # 環境変数をロードします。
-load_dotenv()
+load_dotenv(override=True)
 # OpenAIクライアントを初期化します。
 client = OpenAI()
 
 
-def getCurrentWeather(location, unit="c"):
+def get_current_temperature(location, unit="c"):
     """
     指定された場所の現在の天気を取得します。
 
@@ -34,17 +38,60 @@ def getCurrentWeather(location, unit="c"):
     return f"{val}{unit}"
 
 
-def getNickname(location):
+def get_rain_probability(location):
     """
-    指定された場所のニックネームを取得します。
+    指定された場所の降水確率を取得します。
 
     Parameters:
-    location (str): ニックネームを取得する場所。
+    location (str): 降水確率を取得する場所。
 
     Returns:
-    str: 場所のニックネーム。
+    str: 降水確率を示す文字列。
     """
-    return "LA"
+    return "0.5"
+
+
+def call_function_by_name(function_name, args_dict):
+    # グローバルスコープで関数名の文字列から関数を取得して実行
+    args = ast.literal_eval(args_dict)
+    function = globals()[function_name]
+    return function(**args)
+
+
+class EventHandler(AssistantEventHandler):
+    @override
+    def on_event(self, event):
+        # Retrieve events that are denoted with 'requires_action'
+        # since these will have our tool_calls
+        if event.event == "thread.run.requires_action":
+            run_id = event.data.id  # Retrieve the run ID from the event data
+            self.handle_requires_action(event.data, run_id)
+
+    def handle_requires_action(self, data, run_id):
+        tool_outputs = []
+        for tool in data.required_action.submit_tool_outputs.tool_calls:
+            result = call_function_by_name(tool.function.name, tool.function.arguments)
+            tool_outputs.append({"tool_call_id": tool.id, "output": result})
+
+            # if tool.function.name == "get_current_temperature":
+            #     tool_outputs.append({"tool_call_id": tool.id, "output": "57"})
+            # elif tool.function.name == "get_rain_probability":
+            #     tool_outputs.append({"tool_call_id": tool.id, "output": "0.06"})
+
+        # Submit all tool_outputs at the same time
+        self.submit_tool_outputs(tool_outputs, run_id)
+
+    def submit_tool_outputs(self, tool_outputs, run_id):
+        # Use the submit_tool_outputs_stream helper
+        with client.beta.threads.runs.submit_tool_outputs_stream(
+            thread_id=self.current_run.thread_id,  # type: ignore
+            run_id=self.current_run.id,  # type: ignore
+            tool_outputs=tool_outputs,
+            event_handler=EventHandler(),
+        ) as stream:
+            for text in stream.text_deltas:
+                print(text, end="", flush=True)
+            print()
 
 
 def main():
@@ -52,45 +99,52 @@ def main():
     メイン関数。天気ボットとして機能するアシスタントを作成し、
     ユーザーからのリクエストに応じて天気情報と都市のニックネームを提供します。
     """
+    assistant = None
+    thread = None
+
     try:
         # アシスタントを作成します。
         assistant = client.beta.assistants.create(
-            instructions="You are a weather bot. Use the provided functions to answer questions. Use nicknames to answer the city name.",
-            model="gpt-4-1106-preview",
+            instructions="You are a weather bot. Use the provided functions to answer questions.",
+            model="gpt-4o",
             tools=[
                 {
                     "type": "function",
                     "function": {
-                        "name": "getCurrentWeather",
-                        "description": "Get the weather in location",
+                        "name": "get_current_temperature",
+                        "description": "Get the current temperature for a specific location",
                         "parameters": {
                             "type": "object",
                             "properties": {
                                 "location": {
                                     "type": "string",
-                                    "description": "The city and state e.g. San Francisco, CA",
+                                    "description": "The city and state, e.g., San Francisco, CA",
                                 },
-                                "unit": {"type": "string", "enum": ["c", "f"]},
+                                "unit": {
+                                    "type": "string",
+                                    "enum": ["Celsius", "Fahrenheit"],
+                                    "description": "The temperature unit to use. Infer this from the user's location.",
+                                },
                             },
+                            "required": ["location", "unit"],
                         },
-                        "required": ["location"],
                     },
                 },
                 {
                     "type": "function",
                     "function": {
-                        "name": "getNickname",
-                        "description": "Get the nickname of a city",
+                        "name": "get_rain_probability",
+                        "description": "Get the probability of rain for a specific location",
                         "parameters": {
                             "type": "object",
                             "properties": {
                                 "location": {
                                     "type": "string",
-                                    "description": "The city and state e.g. San Francisco, CA",
-                                },
+                                    "description": "The city and state, e.g., San Francisco, CA",
+                                }
                             },
+                            "required": ["location"],
                         },
-                        "required": ["location"],
                     },
                 },
             ],
@@ -98,57 +152,16 @@ def main():
 
         # スレッドを作成し、ユーザーのメッセージを投稿します。
         thread = client.beta.threads.create()
-        client.beta.threads.messages.create(
-            thread.id,
-            role="user",
-            content="I am in Los Angeles now. Please tell me the weather and City's Nickname.",
-        )
-
-        # アシスタントにタスクを実行させるためのrunを作成します。
-        run = client.beta.threads.runs.create(
+        message = client.beta.threads.messages.create(
             thread_id=thread.id,
-            assistant_id=assistant.id,
+            role="user",
+            content="What's the weather in San Francisco today and the likelihood it'll rain?",
         )
 
-        # runの完了を待ち、結果を取得します。
-        run = retrieve_runs(
-            client=client, thread_id=thread.id, run_id=run.id, max_time=360
-        )
-
-        # 必要なアクションがある場合は、ツールの出力を処理します。
-        if run.required_action:
-            tool_outputs = []
-            for required_action in run.required_action.submit_tool_outputs.tool_calls:
-                tool_call_id = required_action.id
-                func_name = required_action.function.name
-                args_str = required_action.function.arguments
-                args_dict = json.loads(args_str)
-
-                # 関数を実行し、結果を取得します。
-                result = globals()[func_name](**args_dict)
-                tool_outputs.append(
-                    {
-                        "tool_call_id": tool_call_id,
-                        "output": result,
-                    }
-                )
-
-            # ツールの出力をsubmitします。
-            run = client.beta.threads.runs.submit_tool_outputs(
-                thread_id=thread.id, run_id=run.id, tool_outputs=tool_outputs
-            )
-
-            # runの完了を再度待ち、最終結果を取得します。
-            run = retrieve_runs(
-                client=client, thread_id=thread.id, run_id=run.id, max_time=360
-            )
-
-        # スレッド内のメッセージを取得し、変換します。
-        messages = client.beta.threads.messages.list(thread_id=thread.id)
-        result = transform_latest_assistant_messages(messages=messages)
-        # 結果を出力します。
-        for message in result:
-            print(message["content"]["value"])
+        with client.beta.threads.runs.stream(
+            thread_id=thread.id, assistant_id=assistant.id, event_handler=EventHandler()
+        ) as stream:
+            stream.until_done()
 
     except Exception as e:
         # 予期せぬエラーが発生した場合のエラーメッセージを出力します。
